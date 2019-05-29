@@ -14,8 +14,9 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
     uint8 public constant LAST_TRANSACTIONS_SIZE = 4;
 
     uint256 public initialPrice;
-    // Current token value in ether
+    // Current token value in wei
     uint256 public price;
+
     // Allowed ether withdrawals after selling token
     // mapping (address => uint) pendingReturns;
 
@@ -53,15 +54,7 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
     }
 
     /**
-     * @dev Adjusts price approximating an exponential equation so that price is the
-     * initial one when the contract has all tokens and grows 6 orders of magnitude
-     * when it has sold all of them.
-     */
-    /**
-     * @dev Adjusts price following the inverse of available tokens, so that its
-     * (close to) the initial price when the contract has all tokens and grows
-     * fast as the tokens run out. The equation is as follows:
-     * `initialPrice` * `TOTAL_SUPPLY / (`contractBalance` + 1).
+     * @dev Adjusts price by `pctDif` % (to call with each buy/sell operation)
      */
     uint8 pctDif = 2;
     function _adjustPrice(bool buy) internal {
@@ -74,8 +67,6 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
         }
     }
 
-    event Debug(address indexed from, string debugString, uint256 someValue);
-
     /// @dev Buy token from contract with ether
     /// @param amount Of token to buy
     function buy(uint256 amount) public payable {
@@ -85,10 +76,11 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
         _adjustPrice(true);
     }
 
-    /// @dev Sell token to contract for ether.
-    /// @param amount Of token to sell
+    /**
+     * @dev Sell token to contract for ether.
+     * @param amount Of token to sell
+     */
     function sell(uint256 amount) public {
-        // Chequeos?
         uint256 value = amount.mul(price);
         _transfer(msg.sender, address(this), amount);
         msg.sender.transfer(value);
@@ -97,7 +89,7 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
         _adjustPrice(false);
     }
 
-    /// @dev Use withdrawal pattern as it's safer?
+    /// @dev We should use the withdrawal pattern as it's safer
     /// Should do pendingReturns[seller] += in sell()
     // function withdraw() public returns(bool) {
     //     uint amount = pendingReturns[msg.sender];
@@ -111,7 +103,7 @@ contract TenToken is ERC20, ERC20Detailed, Ownable {
     //     return true;
     // }
 
-    /// @dev Retrieve ether balance, only contract owner (deployer if not changed)
+    /// @dev Retrieve ether balance, only callable by contract owner (deployer if not changed)
     function retrieve() external onlyOwner {
         msg.sender.transfer(address(this).balance);
     }

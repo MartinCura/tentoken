@@ -54,13 +54,13 @@ contract TenWithFutures is TenToken {
             sumNum = sumNum + int256((int256(avgDate) - int256(lastTransactions[i].date)) * (int256(avgPrice) - int256(lastTransactions[i].price)));
             sumDen = sumDen + int256((avgDate - lastTransactions[i].date) ** 2);
         }
-        // Calculate the linear parameters multiplied by 10^6 to preserve more precision
+        // Calculate the linear parameters multiplied by 10^6 to preserve some precision
         regr_m = (1e6 * sumNum) / sumDen;
         regr_b = 1e6 * int256(avgPrice) - regr_m * int256(avgDate);
         regressionCalculated = true;
     }
 
-    function calculateFutureValue(uint32 date) view public returns(uint256) {
+    function calculateFutureValue(uint32 date) public returns(uint256) {
         require(regressionCalculated, "Should executeRegression first");
         executeRegression();
         return uint256((regr_m * date + regr_b) / 1e6);
@@ -78,8 +78,8 @@ contract TenWithFutures is TenToken {
     }
 
     /**
-     * @dev Returns array of integers for all unexecuted futures created by that
-     * person. Could then obtain each one with `futures` getter.
+     * @dev Returns array of IDs for all unexecuted futures created by sender.
+     * Can then obtain each with `futures` getter.
      */
     function getOwnFutures() public view returns(uint[] memory) {
         uint[] memory _ownFutures = new uint[](ownerFuturesCount[msg.sender]);
@@ -94,8 +94,8 @@ contract TenWithFutures is TenToken {
     }
 
     /**
-     * @dev Returns array of integers for all *unexecuted* futures. Can only be
-     * used by the contract owner. Could then obtain each one with `futures` getter.
+     * @dev Returns array of IDs for all *unexecuted* futures. Can only be
+     * used by the contract owner. Can then obtain each with `futures` getter.
      */
     function getAllFutures() onlyOwner public view returns(uint[] memory) {
         uint[] memory _allFutures = new uint[](futuresCount);
@@ -157,7 +157,7 @@ contract TenWithFutures is TenToken {
         return executeRegression();
     }
 
-    function calcularValorFuturo(uint32 fecha) view public returns(uint256) {
+    function calcularValorFuturo(uint32 fecha) public returns(uint256) {
         return calculateFutureValue(fecha);
     }
 
